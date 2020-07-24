@@ -11,7 +11,7 @@ class CustomMNetv2Transforms(object):
 
         albumentations_transform = Compose([
             # RandomRotate90(),
-            Resize(256, 256),
+            # Resize(256, 256),
             # PadIfNeeded(72, 72, border_mode=cv2.BORDER_REFLECT, always_apply=True),
             RandomCrop(224, 224, True),
             Flip(),

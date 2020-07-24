@@ -1,4 +1,6 @@
-# import torchvision
+import torch
+cnn_model = torch.hub.load('pytorch/vision', 'mobilenet_v2', pretrained=True).to("cuda")
+
 #
 # import src.dataset
 #

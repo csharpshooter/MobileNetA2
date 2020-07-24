@@ -8,6 +8,8 @@ import asyncio
 import nest_asyncio
 from PIL import ImageFile
 import torchdata as td
+import scipy.ndimage as spimg
+import numpy as np
 
 
 class GenericDataset(td.Dataset):
@@ -22,33 +24,42 @@ class GenericDataset(td.Dataset):
         self.image_memory = []
         self.transforms = transforms
         self.classes = classes
-
-        # for idx in tqdm(self.images):
-        #     img = cv2.imread(idx)
-        #     self.image_memory.append(img)
-
-        #
-        # if self.preload:
-        #     self.preload_image()
-        #     asyncio.ensure_future(self.preload_image())
-
-    def __getitem__(self, idx):
-        if self.preload:
-            image = self.image_memory[idx].convert("RGB")
-        else:
-            image = Image.open(self.images[idx]).convert("RGB")
-
-        if self.transforms is not None:
-            image = self.transforms(image)
-
-        label = {
+        self.label = {
             'Flying Birds': 0,
             'Large QuadCopters': 1,
             'Small QuadCopters': 2,
             'Winged Drones': 3
         }
 
-        return image, label.get(self.labels[idx])
+        if self.preload:
+            for idx in tqdm(self.images):
+                img = cv2.imread(idx, cv2.IMREAD_COLOR)
+                if img is not None and img.size > 0:
+                    res = cv2.resize(img, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
+                    self.image_memory.append(res)
+                else:
+                    print(idx)
+                # img = Image.open(idx)
+                # img_arr = np.array(img)
+                # self.image_memory.append(img_arr)
+                # img = None
+
+            #
+            # if self.preload:
+            #     self.preload_image()
+            #     asyncio.ensure_future(self.preload_image())
+
+    def __getitem__(self, idx):
+        if self.preload:
+            image = self.image_memory[idx]  # .convert("RGB")
+        else:
+            image = Image.open(self.images[idx]).convert("RGB")
+            image = cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
+
+        if self.transforms is not None:
+            image = self.transforms(image)
+
+        return image, self.label.get(self.labels[idx])
 
     def __len__(self):
         return len(self.images)
@@ -57,8 +68,10 @@ class GenericDataset(td.Dataset):
         print("\nPreloading images from dataset...")
         # async for idx in AsyncIterator(tqdm(self.images)):
         for idx in tqdm(self.images):
-            img = cv2.imread(idx)
-            self.image_memory.append(img)
+            img = Image.open(idx)
+            img_arr = np.array(img)
+            self.image_memory.append(img_arr)
+            img = None
 
     def set_transforms(self, transforms=None):
         self.transforms = transforms
