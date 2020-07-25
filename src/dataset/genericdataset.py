@@ -35,8 +35,10 @@ class GenericDataset(td.Dataset):
             for idx in tqdm(self.images):
                 img = cv2.imread(idx, cv2.IMREAD_COLOR)
                 if img is not None and img.size > 0:
-                    res = cv2.resize(img, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
-                    self.image_memory.append(res)
+                    img = cv2.resize(img, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
+                    if self.transforms is not None:
+                        img = self.transforms(img)
+                    self.image_memory.append(img)
                 else:
                     print(idx)
                 # img = Image.open(idx)
@@ -53,11 +55,15 @@ class GenericDataset(td.Dataset):
         if self.preload:
             image = self.image_memory[idx]  # .convert("RGB")
         else:
-            image = Image.open(self.images[idx]).convert("RGB")
+            # image = Image.open(self.images[idx]).convert("RGB")
+            # image = cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
+            image = cv2.imread(self.images[idx], cv2.IMREAD_COLOR)
             image = cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
+            if self.transforms is not None:
+                image = self.transforms(image)
 
-        if self.transforms is not None:
-            image = self.transforms(image)
+        # if self.transforms is not None:
+        #     image = self.transforms(image)
 
         return image, self.label.get(self.labels[idx])
 

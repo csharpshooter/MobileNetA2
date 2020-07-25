@@ -212,6 +212,8 @@ class TrainModel:
         class_total = list(0. for i in range(10))
         optimizer = self.get_optimizer(model=model, weight_decay=weight_decay)
 
+        amp.initialize(model, optimizer, opt_level="O2", verbosity=0)
+
         scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer=optimizer, base_lr=min_lr, max_lr=max_lr,
                                                       mode='triangular2',
                                                       cycle_momentum=True, step_size_up=max_lr_epoch,
@@ -248,8 +250,6 @@ class TrainModel:
 
     def start_training(self, epochs, model, device, test_loader, train_loader, optimizer, scheduler, lr_data,
                        class_correct, class_total, path):
-
-        amp.initialize(model, optimizer, opt_level="O2")
 
         for epoch in range(0, epochs):
             print("EPOCH:", epoch)
@@ -295,6 +295,9 @@ class TrainModel:
         class_correct = list(0. for i in range(10))
         class_total = list(0. for i in range(10))
         optimizer = self.get_optimizer(model=model, lr=lr, weight_decay=weight_decay)
+
+        amp.initialize(model, optimizer, opt_level="O2")
+
         scheduler = Utils.create_scheduler_lambda_lr(lambda_fn, optimizer)
 
         return self.start_training(epochs, model, device, test_loader, train_loader, optimizer, scheduler, lr_data,
